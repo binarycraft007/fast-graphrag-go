@@ -1,0 +1,29 @@
+{{
+	"entities": [
+	{{"name": "Radio City", "type": "organization", "desc": "Radio City is India's first private FM radio station."}},
+	{{"name": "India", "type": "location", "desc": "The country of India."}},
+	{{"name": "FM radio station", "type": "communication", "desc": "A radio station that broadcasts using frequency modulation."}},
+	{{"name": "English", "type": "communication", "desc": "The English language."}},
+	{{"name": "Hindi", "type": "communication", "desc": "The Hindi language."}},
+	{{"name": "New Media", "type": "communication", "desc": "New Media is a term for all forms of media that are digital and/or interactive."}},
+	{{"name": "PlanetRadiocity.com", "type": "organization", "desc": "PlanetRadiocity.com is an online music portal."}},
+	{{"name": "music portal", "type": "communication", "desc": "A website that offers music related information."}},
+	{{"name": "news", "type": "communication", "desc": "The concept of news."}},
+	{{"name": "video", "type": "communication", "desc": "The concept of a video."}},
+	{{"name": "song", "type": "communication", "desc": "The concept of a song."}}
+	],
+	"relationships": [
+	{{"source": "Radio City", "target": "India", "desc": "Radio City is located in India."}},
+	{{"source": "Radio City", "target": "FM radio station", "desc": "Radio City is a private FM radio station started on 3 July 2001."}},
+	{{"source": "Radio City", "target": "English", "desc": "Radio City broadcasts English songs."}},
+	{{"source": "Radio City", "target": "Hindi", "desc": "Radio City broadcasts songs in the Hindi language."}},
+	{{"source": "Radio City", "target": "PlanetRadiocity.com", "desc": "Radio City launched PlanetRadiocity.com in May 2008."}},
+	{{"source": "PlanetRadiocity.com", "target": "music portal", "desc": "PlanetRadiocity.com is a music portal that offers music related news, videos and more."}}
+	],
+	"other_relationships": [
+	{{"source": "Radio City", "target": "New Media", "desc": "Radio City forayed into New Media in May 2008."}},
+	{{"source": "PlanetRadiocity.com", "target": "news", "desc": "PlanetRadiocity.com offers music related news."}},
+	{{"source": "PlanetRadiocity.com", "target": "video", "desc": "PlanetRadiocity.com offers music related videos."}},
+	{{"source": "PlanetRadiocity.com", "target": "song", "desc": "PlanetRadiocity.com offers songs."}}
+	]
+}}
