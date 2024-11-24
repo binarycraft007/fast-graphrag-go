@@ -43,6 +43,8 @@ type MessageConfig struct {
 	MaxTokens       int
 	ResponseType    reflect.Type
 	EmbeddingDim    int
+	ProjectID       string
+	Location        string
 }
 
 type MessageOptions func(mc *MessageConfig)
@@ -80,6 +82,18 @@ func WithEmbeddingDim(embeddingDim int) MessageOptions {
 func WithResponseType(responseType reflect.Type) MessageOptions {
 	return func(mc *MessageConfig) {
 		mc.ResponseType = responseType
+	}
+}
+
+func WithProjectID(projectID string) MessageOptions {
+	return func(mc *MessageConfig) {
+		mc.ProjectID = projectID
+	}
+}
+
+func WithLocation(location string) MessageOptions {
+	return func(mc *MessageConfig) {
+		mc.Location = location
 	}
 }
 

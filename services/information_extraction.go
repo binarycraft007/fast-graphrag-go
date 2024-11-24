@@ -21,12 +21,7 @@ type BaseGraphStorage[Node, Edge, ID any] interface {
 
 // BaseGraphUpsertPolicy defines the interface for graph upserting logic.
 type BaseGraphUpsertPolicy[Node, Edge, ID any] interface {
-	Upsert(llm BaseLLMService, storage BaseGraphStorage[Node, Edge, ID], nodes []Node, edges []Edge) error
-}
-
-// BaseLLMService defines the interface for LLM services.
-type BaseLLMService interface {
-	FormatAndSendPrompt(promptKey string, formatArgs map[string]string, responseModel interface{}) error
+	Upsert(llm llms.LLMService, storage BaseGraphStorage[Node, Edge, ID], nodes []Node, edges []Edge) error
 }
 
 // GleaningStatus represents the status of gleaning.
@@ -49,7 +44,7 @@ type BaseInformationExtractionService[Chunk, Node, Edge, ID any] struct {
 
 // Extract extracts entities and relationships from documents.
 func (s *BaseInformationExtractionService[Chunk, Node, Edge, ID]) Extract(
-	llm BaseLLMService,
+	llm llms.LLMService,
 	documents [][]Chunk,
 	promptArgs map[string]string,
 	entityTypes []string,
@@ -59,7 +54,7 @@ func (s *BaseInformationExtractionService[Chunk, Node, Edge, ID]) Extract(
 
 // ExtractEntitiesFromQuery extracts entities from a query string.
 func (s *BaseInformationExtractionService[Chunk, Node, Edge, ID]) ExtractEntitiesFromQuery(
-	llm BaseLLMService, query string, promptArgs map[string]string,
+	llm llms.LLMService, query string, promptArgs map[string]string,
 ) ([]types.Entity, error) {
 	return nil, errors.New("not implemented")
 }
@@ -128,15 +123,16 @@ func (s *DefaultInformationExtractionService) extractChunks(
 func (s *DefaultInformationExtractionService) extractChunk(
 	llm llms.LLMService, chunk types.Chunk, promptArgs map[string]any, entityTypes []string,
 ) (*types.Graph, error) {
-	promptArgs["input_text"] = chunk.Content
-	promptArgs["entity_relationship_extraction"] = prompts.EntityRelationshipExtractionExample
+	promptArgsCopy := promptArgs
+	promptArgsCopy["input_text"] = chunk.Content
+	promptArgsCopy["entity_relationship_extraction"] = prompts.EntityRelationshipExtractionExample
 
 	ctx := context.Background()
 	chunkGraph, err := llms.FormatAndSendPrompt(
 		ctx,
 		"entity_relationship_extraction",
 		llm,
-		promptArgs,
+		promptArgsCopy,
 		llms.WithResponseType(reflect.TypeOf(types.Graph{})),
 	)
 	if err != nil {
@@ -144,7 +140,7 @@ func (s *DefaultInformationExtractionService) extractChunk(
 	}
 
 	// Glean additional details if necessary
-	finalGraph, err := s.gleaning(llm, chunkGraph.(*types.Graph), []map[string]string{})
+	finalGraph, err := s.gleaning(ctx, llm, chunkGraph.(*types.Graph))
 	if err != nil {
 		return nil, err
 	}
@@ -164,32 +160,40 @@ func (s *DefaultInformationExtractionService) extractChunk(
 }
 
 func (s *DefaultInformationExtractionService) gleaning(
-	llm llms.LLMService, initialGraph *types.Graph, history []map[string]string,
+	ctx context.Context, llm llms.LLMService, initialGraph *types.Graph,
 ) (*types.Graph, error) {
 	currentGraph := initialGraph
 
-	//for step := 0; step < s.MaxGleaningSteps; step++ {
-	//	gleaningResult := &types.Graph{}
-	//	err := llm.FormatAndSendPrompt("entity_relationship_continue_extraction", map[string]string{}, gleaningResult)
-	//	if err != nil {
-	//		log.Println("Gleaning error:", err)
-	//		return nil, err
-	//	}
+	for step := 0; step < s.MaxGleaningSteps; step++ {
+		result, err := llms.FormatAndSendPrompt(
+			ctx, "entity_relationship_continue_extraction",
+			llm, map[string]string{},
+			llms.WithResponseType(reflect.TypeOf(types.Graph{})),
+		)
+		if err != nil {
+			log.Println("Gleaning error:", err)
+			return nil, err
+		}
+		gleaningResult := result.(*types.Graph)
 
-	//	currentGraph.Entities = append(currentGraph.Entities, gleaningResult.Entities...)
-	//	currentGraph.Relationships = append(currentGraph.Relationships, gleaningResult.Relationships...)
+		currentGraph.Entities = append(currentGraph.Entities, gleaningResult.Entities...)
+		currentGraph.Relationships = append(currentGraph.Relationships, gleaningResult.Relationships...)
 
-	//	gleaningStatus := &GleaningStatus{}
-	//	err = llm.FormatAndSendPrompt("entity_relationship_gleaning_done_extraction", map[string]string{}, gleaningStatus)
-	//	if err != nil {
-	//		log.Println("Gleaning status error:", err)
-	//		return nil, err
-	//	}
+		status, err := llms.FormatAndSendPrompt(
+			ctx, "entity_relationship_gleaning_done_extraction",
+			llm, map[string]string{},
+			llms.WithResponseType(reflect.TypeOf(GleaningStatus{})),
+		)
+		if err != nil {
+			log.Println("Gleaning status error:", err)
+			return nil, err
+		}
+		gleaningStatus := status.(*GleaningStatus)
 
-	//	if gleaningStatus.Status == "done" {
-	//		break
-	//	}
-	//}
+		if gleaningStatus.Status == "done" {
+			break
+		}
+	}
 
 	return currentGraph, nil
 }

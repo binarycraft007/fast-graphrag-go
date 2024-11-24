@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"os"
 	"strings"
 	"time"
 
@@ -19,7 +18,7 @@ var data string
 func main() {
 	entiryTypes := []string{"Character", "Animal", "Place", "Object", "Activity", "Event"}
 	ctx := context.Background()
-	llm, err := llms.NewGoogleAILLMService(ctx, os.Getenv("GEMINI_API_KEY"))
+	llm, err := llms.NewVertexAILLMService(ctx, llms.WithProjectID("XXXXXXXXX"), llms.WithLocation("us-central1"))
 	if err != nil {
 		panic(err)
 	}

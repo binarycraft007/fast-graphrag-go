@@ -34,6 +34,6 @@ type Graph struct {
 type Relation struct {
 	Source      string   `json:"source"`
 	Target      string   `json:"target"`
-	Description string   `json:"description"`
-	Chunks      []uint64 `json:"chunks"`
+	Description string   `json:"desc"`
+	Chunks      []uint64 `json:"-"`
 }
